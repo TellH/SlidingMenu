@@ -32,8 +32,8 @@ public class SlidingMenu extends HorizontalScrollView {
     //一秒钟对应的像素点个数
     private int mFling;
 
-    private void init(Context context){
-        mMenuPaddingRight=Util.dp2px(context,50);
+    private void init(Context context) {
+        mMenuPaddingRight = Util.dp2px(context, 50);
         //获得屏幕宽度
         WindowManager wm = (WindowManager) context.getSystemService(
                 Context.WINDOW_SERVICE);
@@ -48,6 +48,7 @@ public class SlidingMenu extends HorizontalScrollView {
         setHorizontalScrollBarEnabled(false);
         setHorizontalFadingEdgeEnabled(false);
     }
+
     public SlidingMenu(Context context) {
         super(context);
         init(context);
@@ -65,14 +66,14 @@ public class SlidingMenu extends HorizontalScrollView {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        if (!once){
+        if (!once) {
             //确定子View的尺寸
-            mWrapper= (ViewGroup) getChildAt(0);
-            mMenu= (ViewGroup) mWrapper.getChildAt(0);
-            mContent= (ViewGroup) mWrapper.getChildAt(1);
-            mContent.getLayoutParams().width=mScreenWidth;
-            mMenuWidth=mMenu.getLayoutParams().width=mScreenWidth-mMenuPaddingRight;
-            once=true;
+            mWrapper = (ViewGroup) getChildAt(0);
+            mMenu = (ViewGroup) mWrapper.getChildAt(0);
+            mContent = (ViewGroup) mWrapper.getChildAt(1);
+            mContent.getLayoutParams().width = mScreenWidth;
+            mMenuWidth = mMenu.getLayoutParams().width = mScreenWidth - mMenuPaddingRight;
+            once = true;
         }
 
         Log.d("TAG", "onMeasure() called with: " + "widthMeasureSpec = [" + widthMeasureSpec + "], heightMeasureSpec = [" + heightMeasureSpec + "]");
@@ -82,7 +83,7 @@ public class SlidingMenu extends HorizontalScrollView {
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         super.onLayout(changed, l, t, r, b);
-        if (changed){
+        if (changed) {
             //初始时Scroller的状态
             this.scrollTo(mMenuWidth, 0);
         }
@@ -91,47 +92,41 @@ public class SlidingMenu extends HorizontalScrollView {
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         initVelocityTracker(ev);
-        switch (ev.getAction()){
+        switch (ev.getAction()) {
             case MotionEvent.ACTION_UP:
                 //如果是Fling操作则触发开关
-                if (computeVelocity()){
-                    toggle();
+                if (computeVelocity()) {
                     return false;
                 }
                 //如果在菜单打开时点击了内容区域，自动关闭菜单
-                if (mShow&&Math.abs(mLastX-ev.getX())<mTouchSlop&&ev.getX()>=mMenuWidth){
+                if (mShow && Math.abs(mLastX - ev.getX()) < mTouchSlop && ev.getX() >= mMenuWidth) {
                     toggle();
                     return false;
                 }
-                if (getScrollX()<mMenuWidth/2) {
-                    smoothScrollTo(0, 0);
-                    mShow = true;
-                }
-                else {
-                    smoothScrollTo(mMenuWidth,0);
-                    mShow = false;
+                if (getScrollX() < mMenuWidth / 2) {
+                    openMenu();
+                } else {
+                    closeMenu();
                 }
                 return false;//这里不能替换成break;
             case MotionEvent.ACTION_CANCEL:
-                mLastX=ev.getX();
+                mLastX = ev.getX();
                 release();
                 break;
             case MotionEvent.ACTION_DOWN:
-                mLastX=ev.getX();
+                mLastX = ev.getX();
                 //得到第一个落下的手指的id
-                mPointId=ev.getPointerId(0);
+                mPointId = ev.getPointerId(0);
                 break;
         }
         return super.onTouchEvent(ev);//因为只拦截处理了一种MotionEvent，所以需要调用父类的方法处理剩下的事件。
     }
 
     private void toggle() {
-        if (mShow){
-            smoothScrollTo(mMenuWidth,0);
-            mShow = false;
-        }else {
-            smoothScrollTo(0, 0);
-            mShow = true;
+        if (mShow) {
+            closeMenu();
+        } else {
+            openMenu();
         }
     }
 
@@ -148,21 +143,42 @@ public class SlidingMenu extends HorizontalScrollView {
         //判断当ev事件是MotionEvent.ACTION_UP时：计算速率
         final VelocityTracker velocityTracker = mVelocityTracker;
         // 1000 provides pixels per second
-        velocityTracker.computeCurrentVelocity(1000,200); //设置units的值为1000，意思为一秒时间内运动了多少个像素
+        velocityTracker.computeCurrentVelocity(1000, 200); //设置units的值为1000，意思为一秒时间内运动了多少个像素
 //        Log.i("test","velocityTraker"+velocityTracker.getXVelocity());
-        Log.d("TAG","velocityTracker.getXVelocity():"+velocityTracker.getXVelocity()+"mFling:"+mFling);
-        if (Math.abs(velocityTracker.getXVelocity(mPointId))>mFling)
+        Log.d("TAG", "velocityTracker.getXVelocity():" + velocityTracker.getXVelocity() + "mFling:" + mFling);
+        float xVelocity = velocityTracker.getXVelocity(mPointId);
+        if (Math.abs(xVelocity) > mFling) {
+            if (xVelocity > 0) {
+                openMenu();
+            } else {
+                closeMenu();
+            }
             return true;
-        else return false;
+        } else return false;
+    }
+
+    public void openMenu() {
+        if (!mShow){
+            smoothScrollTo(0, 0);
+            mShow = true;
+        }
+    }
+
+    public void closeMenu() {
+        if (mShow){
+            smoothScrollTo(mMenuWidth, 0);
+            mShow = false;
+        }
     }
 
     private void release() {
-        if(null != mVelocityTracker) {
+        if (null != mVelocityTracker) {
             mVelocityTracker.clear();
             mVelocityTracker.recycle();
             mVelocityTracker = null;
         }
     }
+
     @Override
     protected void onScrollChanged(int l, int t, int oldl, int oldt) {
         super.onScrollChanged(l, t, oldl, oldt);
@@ -174,8 +190,8 @@ public class SlidingMenu extends HorizontalScrollView {
 */
         //这是仿qq的侧滑效果
         //offset从1变化到0，打开菜单是HorizontalScrollView往回滑的过程
-        float offset = l*1.0f/mMenuWidth;
+        float offset = l * 1.0f / mMenuWidth;
         //设置x方向的偏移量，处于关闭状态时，menu的偏移量为mMenuWidth的3/4
-        ViewHelper.setTranslationX(mMenu,0.75f*mMenuWidth*offset);
+        ViewHelper.setTranslationX(mMenu, 0.75f * mMenuWidth * offset);
     }
 }
