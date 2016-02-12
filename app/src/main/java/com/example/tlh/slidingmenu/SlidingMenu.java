@@ -106,6 +106,7 @@ public class SlidingMenu extends HorizontalScrollView {
                 if (getScrollX() < mMenuWidth / 2) {
                     openMenu();
                 } else {
+                    Log.d("TAG", "getScrollX() >= mMenuWidth / 2");
                     closeMenu();
                 }
                 return false;//这里不能替换成break;
@@ -158,17 +159,13 @@ public class SlidingMenu extends HorizontalScrollView {
     }
 
     public void openMenu() {
-        if (!mShow){
-            smoothScrollTo(0, 0);
-            mShow = true;
-        }
+        smoothScrollTo(0, 0);
+        mShow = true;
     }
 
     public void closeMenu() {
-        if (mShow){
-            smoothScrollTo(mMenuWidth, 0);
-            mShow = false;
-        }
+        smoothScrollTo(mMenuWidth, 0);
+        mShow = false;
     }
 
     private void release() {
