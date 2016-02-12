@@ -3,6 +3,7 @@
     package="com.example.tlh.slidingmenu" >
 
     <application
+        android:label="SlidingMenu"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:supportsRtl="true"
